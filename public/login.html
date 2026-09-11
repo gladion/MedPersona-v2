@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedSim Review — Sign In</title>
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <div class="login-brand"><span class="icon">🩺</span><span class="name">MedSim Review</span></div>
+    <div class="login-sub">Technion &middot; Faculty of Medicine &amp; Faculty of Education &middot; MARAK Course</div>
+
+    <div class="login-error" id="login-error"></div>
+
+    <form id="login-form">
+      <div class="field">
+        <label for="username">Username</label>
+        <input type="text" id="username" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn btn-primary login-submit" id="login-btn">Sign In</button>
+    </form>
+
+    <div class="login-foot">Access is restricted to authorized reviewers.</div>
+  </div>
+</div>
+
+<script>
+const form = document.getElementById('login-form');
+const errBox = document.getElementById('login-error');
+const btn = document.getElementById('login-btn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  errBox.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'Signing in…';
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        username: document.getElementById('username').value.trim(),
+        password: document.getElementById('password').value
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    window.location.href = data.user.role === 'admin' ? '/admin.html' : '/doctor.html';
+  } catch (err) {
+    errBox.textContent = err.message;
+    errBox.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Sign In';
+  }
+});
+
+// If already logged in, skip straight to the right dashboard.
+fetch('/api/auth/me').then(r => r.ok ? r.json() : null).then(data => {
+  if (data && data.user) {
+    window.location.href = data.user.role === 'admin' ? '/admin.html' : '/doctor.html';
+  }
+}).catch(() => {});
+</script>
+</body>
+</html>
