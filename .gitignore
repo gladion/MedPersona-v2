@@ -3,5 +3,3 @@ npm-debug.log*
 .DS_Store
 *.log
 
-# Never commit real database credentials.
-.env
